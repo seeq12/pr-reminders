@@ -11,8 +11,7 @@ def build_pr_message(pr: PrData):
     updated_at_text = pr.updated_at.strftime('%B %d')
     # https://api.slack.com/reference/surfaces/formatting#date-formatting
     return f'* <{pr.html_url}|{pr.title}> ' \
-           f'<!date^{updated_at_timestamp}^(Waiting since {{date_short_pretty}} at {{time}})|{updated_at_text}>' \
-           f' Pending reviews from {pr.reviewers}'
+           f'<!date^{updated_at_timestamp}^(Waiting since {{date_short_pretty}} at {{time}})|{updated_at_text}>'
 
 
 def notify_reviewers_of_prs_needing_review():
