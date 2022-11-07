@@ -1,10 +1,9 @@
 # Introduction
-The tool will notify the reviewers of PRs needing review on a Slack channel.
-
-"Needing review" is defined as:
-* PRs with 0 reviews and
-* number of review requests > 0
-* having at least one reviewer from the Team
+The tool will 
+* notify the reviewers of PRs needing review on a Slack channel (PRs with 0 reviews and number of review requests > 0 
+having at least one reviewer from the Team)
+* notify the reviewers of sleeping PRs on a Slack channel (PRs with no activity in tha last 3 days)
+* notify the reviewers of PRs with no primary reviewer on a Slack channel
 
 # Configuration of the tool
 ## Environment variables
