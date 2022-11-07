@@ -115,7 +115,25 @@ class GithubApi:
         result = self._fetch_open_pull_requests(REPO_NODE_IDS)
         prs = [pr for repo in result['data']['nodes']
                for pr in repo['pullRequests']['nodes']
-               if pr['reviews']['totalCount'] == 0 and pr['reviewRequests']['totalCount'] > 0 and len(_extract_reviewers(pr)) > 0]
+               if pr['reviews']['totalCount'] == 0 and pr['reviewRequests']['totalCount'] > 0 and len(
+                _extract_reviewers(pr)) > 0]
+        return [
+            PrData(
+                datetime.datetime.strptime(pr['updatedAt'], '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=datetime.timezone.utc),
+                pr['title'],
+                pr['body'],
+                pr['url'],
+                pr['isDraft'],
+                _extract_reviewers(pr)
+            )
+            for pr in prs
+        ]
+
+    def fetch_all_prs_for_squad(self) -> List[PrData]:
+        result = self._fetch_open_pull_requests(REPO_NODE_IDS)
+        prs = [pr for repo in result['data']['nodes']
+               for pr in repo['pullRequests']['nodes']
+               if len(_extract_reviewers(pr)) > 0]
         return [
             PrData(
                 datetime.datetime.strptime(pr['updatedAt'], '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=datetime.timezone.utc),
