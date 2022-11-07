@@ -22,7 +22,6 @@ def notify_reviewers_of_prs_needing_review():
 
     gh_api = GithubApi()
     prs_needing_review = sorted(gh_api.fetch_prs_needing_review(), key=lambda pr: pr.updated_at)
-    pr_messages = [build_pr_message(pr) for pr in prs_needing_review]
     all_reviewer_squad_members = list({
         squad.github_username_lookup[reviewer]
         for pr in prs_needing_review
@@ -32,6 +31,7 @@ def notify_reviewers_of_prs_needing_review():
     reviewer_emails = [member.email for member in all_reviewer_squad_members]
 
     slackbot = slack.Bot()
+    pr_messages = [build_pr_message(pr) for pr in prs_needing_review]
     message_template = Template(f'The following PRs have review requests and zero reviews - please take a look!\n\n'
                                 + '\n'.join(pr_messages)
                                 + '\n\n$users')
@@ -41,3 +41,4 @@ def notify_reviewers_of_prs_needing_review():
 if __name__ == '__main__':
     notify_reviewers_of_prs_needing_review()
     # TODO: add PRs without activity in last 3 days
+    # TODO: PRs without primary https://seeq.slack.com/archives/C02KE7G2EKY/p1667491396002439
