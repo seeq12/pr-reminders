@@ -1,28 +1,24 @@
+import csv
+import os
+
 from squad_member import SquadMember
 
-# TODO: Extract this in a csv file so that the utility can be used for other squads
 
-nikhila = SquadMember('nikhila.albert@seeq.com', 'totallyna')
-chris = SquadMember('chris.herrera@seeq.com', 'cherrera2001')
-james = SquadMember('james.demarco@seeq.com', 'DJamesP')
-mariuso = SquadMember('marius.oancea@seeq.com', 'mar1u50')
-rianflynn = SquadMember('rian.flynn@seeq.com', 'rianflynn')
-winner = SquadMember('winner.bolorunduro@seeq.com', 'bolorundurowb-sq')
-andrerigon = SquadMember('andre.rigon@seeq.com', 'andre-rigon')
-alberto = SquadMember('alberto.rivas@seeq.com', 'monstrorivas')
-hiro = SquadMember('hiroito.watanabe@seeq.com', '1hirow')
+SQUAD_CSV_FILENAME_VAR = 'SQUAD_CSV_FILENAME'
 
-members = [
-    nikhila,
-    chris,
-    james,
-    mariuso,
-    rianflynn,
-    winner,
-    andrerigon,
-    alberto,
-    hiro
-]
 
+def _read_from_csv() -> list[SquadMember]:
+    if SQUAD_CSV_FILENAME_VAR not in os.environ:
+        raise RuntimeError(f'{SQUAD_CSV_FILENAME_VAR} must be set as an environment variable')
+    csv_name = os.environ[SQUAD_CSV_FILENAME_VAR]
+    squad_members = []
+    with open(csv_name, newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            squad_members.append(SquadMember(row['Email'], row['GithubUser']))
+    return squad_members
+
+
+members = _read_from_csv()
 members_github_usernames = [member.github_username for member in members]
 github_username_lookup = {member.github_username: member for member in members}

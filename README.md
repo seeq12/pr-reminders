@@ -11,8 +11,19 @@ The tool will notify the reviewers of PRs needing review on a Slack channel.
 * GITHUB_ACCESS_TOKEN - Github access token to be used to call the Github API to find out open PRs.
 * NOTIFY_REVIEWERS_SLACK_CHANNEL - Slack channel where the Bot will send the reminders
 * SLACK_BOT_ACCESS_TOKEN - Slack access token to be used to send the reminders
+* SQUAD_CSV_FILENAME - The name of a CSV file containing the mapping between user email and github user.
 
-## squad.py
-`squad.py` needs to define the members of the squad. The tool needs to to know for each member the email address 
-(to be able to interact with Slack) and github user account (to interact with Github).
+## Structure of the csv file given by SQUAD_CSV_FILENAME
+The tool needs to know for each member the email address (to be able to interact with Slack) and github user account 
+(to interact with Github).
 
+The csv defining the mapping between emails and github users has to have 2 columns:
+- Email - the email of the team member 
+- GithubUser - the github user of the team member
+
+Example csv file:
+```
+Email,GithubUser
+your.name@seeq.com,yourGithubUser
+another.user@seeq.com,anotherGithubUser
+```
