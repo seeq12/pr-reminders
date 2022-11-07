@@ -7,10 +7,10 @@ having at least one reviewer from the Team)
 
 # Configuration of the tool
 ## Environment variables
-* GITHUB_ACCESS_TOKEN - Github access token to be used to call the Github API to find out open PRs.
+* GITHUB_ACCESS_TOKEN - Github access token to be used to call the Github API to find out open PRs
 * NOTIFY_REVIEWERS_SLACK_CHANNEL - Slack channel where the Bot will send the reminders
 * SLACK_BOT_ACCESS_TOKEN - Slack access token to be used to send the reminders
-* SQUAD_CSV_FILENAME - The name of a CSV file containing the mapping between user email and github user.
+* SQUAD_CSV_FILENAME - The name of a CSV file containing the mapping between user email and github user
 
 ## Structure of the csv file given by SQUAD_CSV_FILENAME
 The tool needs to know for each member the email address (to be able to interact with Slack) and github user account 
