@@ -19,11 +19,13 @@ class PrData:
     def __init__(self,
                  updated_at: datetime.datetime,
                  title: str,
+                 body: str,
                  html_url: str,
                  is_draft: bool,
                  reviewers: List[Username]):
         self.updated_at = updated_at
         self.title = title
+        self.body = body
         self.html_url = html_url
         self.is_draft = is_draft
         self.reviewers = reviewers
@@ -72,6 +74,7 @@ class GithubApi:
                                   updatedAt
                                   url
                                   isDraft
+                                  body
 
                                   reviews(states: [APPROVED, CHANGES_REQUESTED], first: 50) {
                                     totalCount
@@ -113,11 +116,11 @@ class GithubApi:
         prs = [pr for repo in result['data']['nodes']
                for pr in repo['pullRequests']['nodes']
                if pr['reviews']['totalCount'] == 0 and pr['reviewRequests']['totalCount'] > 0 and len(_extract_reviewers(pr)) > 0]
-               #if pr['reviewRequests']['totalCount'] > 0 and len(_extract_reviewers(pr)) > 0]
         return [
             PrData(
                 datetime.datetime.strptime(pr['updatedAt'], '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=datetime.timezone.utc),
                 pr['title'],
+                pr['body'],
                 pr['url'],
                 pr['isDraft'],
                 _extract_reviewers(pr)
