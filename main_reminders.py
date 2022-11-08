@@ -35,7 +35,7 @@ def notify_reviewers_of_sleeping_prs():
         sleeping_prs)
 
 
-def _no_primary(pr: PrData)->bool:
+def _no_primary(pr: PrData) -> bool:
     primary = _extract_primary(pr).lower()
     return primary.find('replace this with a @mention') >= 0 or primary.find('volunt') >= 0
 
@@ -57,12 +57,12 @@ def _notify_reviewers_channel():
     return os.environ.get(NOTIFY_REVIEWERS_SLACK_CHANNEL_VAR_NAME)
 
 
-def _extract_primary(pr: PrData)->str:
+def _extract_primary(pr: PrData) -> str:
     after_marker1 = pr.body.find('**Primary reviewer**') + len('**Primary reviewer**')
     marker2 = pr.body.find('**Knowledge base**')
     if after_marker1 < 0 or marker2 < after_marker1:
         return ''
-    return pr.body[after_marker1 : marker2].strip()
+    return pr.body[after_marker1: marker2].strip()
 
 
 def _reviewers_for_prs(prs_needing_review):
