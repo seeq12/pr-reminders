@@ -19,8 +19,7 @@ def notify_reviewers_of_prs_needing_review():
 def notify_reviewers_of_prs_without_primary():
     gh_api = GithubApi()
     all_prs_of_squad = sorted(gh_api.fetch_all_prs_for_squad(), key=lambda pr: pr.updated_at)
-    prs_without_primary = [pr for pr in all_prs_of_squad
-                           if _extract_primary(pr) in ['@voluteers', '(replace this with a @Mention)']]
+    prs_without_primary = [pr for pr in all_prs_of_squad if _no_primary(pr)]
     _slackbot_notify(
         'The following PRs have have no primary reviewer - please take a look!',
         prs_without_primary)
@@ -34,6 +33,11 @@ def notify_reviewers_of_sleeping_prs():
     _slackbot_notify(
         'The following PRs are sleeping (no update in the last 3 days) - please take a look!',
         sleeping_prs)
+
+
+def _no_primary(pr: PrData)->bool:
+    primary = _extract_primary(pr).lower()
+    return primary.find('replace this with a @mention') >= 0 or primary.find('volunt') >= 0
 
 
 def _slackbot_notify(notification_text: str, prs: list[PrData]):
@@ -53,7 +57,7 @@ def _notify_reviewers_channel():
     return os.environ.get(NOTIFY_REVIEWERS_SLACK_CHANNEL_VAR_NAME)
 
 
-def _extract_primary(pr: PrData):
+def _extract_primary(pr: PrData)->str:
     after_marker1 = pr.body.find('**Primary reviewer**') + len('**Primary reviewer**')
     marker2 = pr.body.find('**Knowledge base**')
     if after_marker1 < 0 or marker2 < after_marker1:
