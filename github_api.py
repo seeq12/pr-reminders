@@ -113,6 +113,8 @@ class GithubApi:
 
     def fetch_prs_needing_review(self) -> List[PrData]:
         result = self._fetch_open_pull_requests(REPO_NODE_IDS)
+        if 'data' not in result:
+          return []
         prs = [pr for repo in result['data']['nodes']
                for pr in repo['pullRequests']['nodes']
                if pr['reviews']['totalCount'] == 0 and pr['reviewRequests']['totalCount'] > 0 and len(
@@ -131,6 +133,8 @@ class GithubApi:
 
     def fetch_all_prs_for_squad(self) -> List[PrData]:
         result = self._fetch_open_pull_requests(REPO_NODE_IDS)
+        if 'data' not in result:
+          return []
         prs = [pr for repo in result['data']['nodes']
                for pr in repo['pullRequests']['nodes']
                if len(_extract_reviewers(pr)) > 0]

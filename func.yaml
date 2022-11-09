@@ -1,0 +1,32 @@
+specVersion: 0.34.0
+name: pr-reminders
+runtime: python
+registry: docker.io/seeq13
+image: docker.io/seeq13/pr-reminders:latest
+imageDigest: ""
+created: 2022-11-08T14:54:46.343075-08:00
+invocation:
+  format: http
+build:
+  buildpacks: []
+  builder: pack
+  buildEnvs: []
+run:
+  volumes: []
+  envs:
+  - name: GITHUB_ACCESS_TOKEN
+    value: "insert token"
+  - name: NOTIFY_REVIEWERS_SLACK_CHANNEL
+    value: "slack channel ID"
+  - name: SLACK_BOT_ACCESS_TOKEN
+    value: "insert token"
+  - name: SQUAD_CSV_FILENAME
+    value: "squad.csv"
+deploy:
+  namespace: ""
+  annotations: {}
+  options: {}
+  labels: []
+  healthEndpoints:
+    liveness: /health/liveness
+    readiness: /health/readiness
