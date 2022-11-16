@@ -12,7 +12,9 @@ GITHUB_ACCESS_TOKEN_VAR = 'GITHUB_ACCESS_TOKEN'
 # octolytics-dimension-repository_id.
 # You should find something that looks like:
 # <command-palette-page-stack data-default-scope-id="MDEwOlJlcG9zaXRvcnkyNTU2NzQ4ODQ="
-REPO_NODE_IDS = ['MDEwOlJlcG9zaXRvcnkyNTU2NzQ4ODQ=']
+REPO_NODE_IDS = ['MDEwOlJlcG9zaXRvcnkyNTU2NzQ4ODQ=',
+                 'R_kgDOHbQ7kQ',
+                 'MDEwOlJlcG9zaXRvcnkzNzc0MjA1NDc=']
 
 
 class PrData:
@@ -62,59 +64,14 @@ class GithubApi:
         return response.json()
 
     def _fetch_open_pull_requests(self, repo_ids: List[str]) -> dict:
+      with open('pull_requests.graphql') as query_file:
         return self._fetch_graphql({
             'variables': {'repo_ids': repo_ids},
-            'query': """query($repo_ids:[ID!]!) {
-                          nodes (ids: $repo_ids) {
-                            ... on Repository {
-                              name
-                              pullRequests(states: OPEN, first: 100, orderBy: {field: UPDATED_AT, direction: ASC}) {
-                                nodes {
-                                  title
-                                  updatedAt
-                                  url
-                                  isDraft
-                                  body
-
-                                  reviews(states: [APPROVED, CHANGES_REQUESTED], first: 50) {
-                                    totalCount
-                                    nodes {
-                                      state
-                                      author {
-                                        login
-                                      }
-                                    }
-                                  }
-
-                                  reviewRequests(first: 50) {
-                                    totalCount
-                                    nodes {
-                                      requestedReviewer {
-                                        ... on Team {
-                                          members(first: 50) {
-                                            nodes {
-                                              login
-                                            }
-                                          }
-                                        }
-                                        ... on User {
-                                          login
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        }
-            """
+            'query': query_file.read()
         })
 
     def fetch_prs_needing_review(self) -> List[PrData]:
         result = self._fetch_open_pull_requests(REPO_NODE_IDS)
-        if 'data' not in result:
-          return []
         prs = [pr for repo in result['data']['nodes']
                for pr in repo['pullRequests']['nodes']
                if pr['reviews']['totalCount'] == 0 and pr['reviewRequests']['totalCount'] > 0 and len(
@@ -133,8 +90,6 @@ class GithubApi:
 
     def fetch_all_prs_for_squad(self) -> List[PrData]:
         result = self._fetch_open_pull_requests(REPO_NODE_IDS)
-        if 'data' not in result:
-          return []
         prs = [pr for repo in result['data']['nodes']
                for pr in repo['pullRequests']['nodes']
                if len(_extract_reviewers(pr)) > 0]

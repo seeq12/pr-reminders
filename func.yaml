@@ -3,7 +3,7 @@ name: pr-reminders
 runtime: python
 registry: docker.io/seeq13
 image: docker.io/seeq13/pr-reminders:latest
-imageDigest: ""
+imageDigest: sha256:bde23270d664a3c779767a5602a3c38998358175aa13b93c1e985fe0e6680d85
 created: 2022-11-08T14:54:46.343075-08:00
 invocation:
   format: http
@@ -23,7 +23,7 @@ run:
   - name: SQUAD_CSV_FILENAME
     value: "squad.csv"
 deploy:
-  namespace: ""
+  namespace: default
   annotations: {}
   options: {}
   labels: []

@@ -1,0 +1,44 @@
+query($repo_ids:[ID!]!) {
+  nodes (ids: $repo_ids) {
+    ... on Repository {
+      name
+      pullRequests(states: OPEN, first: 50, orderBy: {field: UPDATED_AT, direction: ASC}) {
+        nodes {
+          title
+          updatedAt
+          url
+          isDraft
+          body
+
+          reviews(states: [APPROVED, CHANGES_REQUESTED], first: 50) {
+            totalCount
+            nodes {
+              state
+              author {
+                login
+              }
+            }
+          }
+
+          reviewRequests(first: 50) {
+            totalCount
+            nodes {
+              requestedReviewer {
+                ... on Team {
+                  members(first: 50) {
+                    nodes {
+                      login
+                    }
+                  }
+                }
+                ... on User {
+                  login
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

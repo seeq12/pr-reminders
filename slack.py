@@ -37,5 +37,4 @@ class Bot:
         user_ids = [response.data['user']['id'] for response in user_responses]
         user_id_references = [f'<@{user_id}>' for user_id in user_ids]
         message = template.substitute(users=''.join(user_id_references))
-        print(message)
-        # return self.send_message(channel, message)
+        return self.send_message(channel, message)
