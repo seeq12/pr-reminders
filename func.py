@@ -4,7 +4,7 @@ import json
 from parliament import Context
 from flask import Request
 
-from main_reminders import notify_reviewers_of_prs_needing_review, notify_reviewers_of_prs_without_primary, notify_reviewers_of_sleeping_prs
+import main_reminders
 
 
 @dataclass
@@ -15,9 +15,7 @@ class Response:
 
 def handle(req: Request) -> Response:
   if req.method == "GET":
-    notify_reviewers_of_prs_needing_review()
-    notify_reviewers_of_prs_without_primary()
-    notify_reviewers_of_sleeping_prs()
+    main_reminders.main()
     return Response({'data': 'Success!'})
   else:
     return Response({'data': 'Not found'}, 404)

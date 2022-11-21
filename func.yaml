@@ -22,6 +22,8 @@ run:
     value: "insert token"
   - name: SQUAD_CSV_FILENAME
     value: "squad.csv"
+  - name: PR_REMINDERS_CONFIG_PATH
+    value: "config.json"
 deploy:
   namespace: default
   annotations: {}
