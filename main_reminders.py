@@ -11,28 +11,36 @@ NOTIFY_REVIEWERS_SLACK_CHANNEL_VAR_NAME = 'NOTIFY_REVIEWERS_SLACK_CHANNEL'
 def notify_reviewers_of_prs_needing_review():
     gh_api = GithubApi()
     prs_needing_review = sorted(gh_api.fetch_prs_needing_review(), key=lambda pr: pr.updated_at)
-    _slackbot_notify(
-        'The following PRs have review requests and zero reviews - please take a look!',
-        prs_needing_review)
+    if len(prs_needing_review) > 0:
+        _slackbot_notify(
+            'The following PRs have review requests and zero reviews - please take a look!',
+            prs_needing_review)
+    else:
+        _slackbot_notify('All PRs have at least one review :tada:! Great work team!', prs_needing_review)
 
 
 def notify_reviewers_of_prs_without_primary():
     gh_api = GithubApi()
     all_prs_of_squad = sorted(gh_api.fetch_all_prs_for_squad(), key=lambda pr: pr.updated_at)
     prs_without_primary = [pr for pr in all_prs_of_squad if _no_primary(pr)]
-    _slackbot_notify(
-        'The following PRs have have no primary reviewer - please take a look!',
-        prs_without_primary)
-
+    if len(prs_without_primary) > 0:
+        _slackbot_notify(
+            'The following PRs have have no primary reviewer - please take a look!',
+            prs_without_primary)
+    else:
+        _slackbot_notify('All PRs have a primary reviewer :tada:! Great work team!', prs_without_primary)
 
 def notify_reviewers_of_sleeping_prs():
     past = datetime.utcnow().replace(tzinfo=timezone.utc) - timedelta(days=3)
     gh_api = GithubApi()
     all_prs_of_squad = sorted(gh_api.fetch_all_prs_for_squad(), key=lambda pr: pr.updated_at)
     sleeping_prs = [pr for pr in all_prs_of_squad if pr.updated_at < past]
-    _slackbot_notify(
-        'The following PRs are sleeping (no update in the last 3 days) - please take a look!',
-        sleeping_prs)
+    if len(sleeping_prs) > 0:
+        _slackbot_notify(
+            'The following PRs are sleeping (no update in the last 3 days) - please take a look!',
+            sleeping_prs)
+    else:
+        _slackbot_notify('All PRs are active. No PR is sleeping :tada:! Great work team!', sleeping_prs)
 
 
 def _no_primary(pr: PrData) -> bool:
