@@ -1,5 +1,4 @@
 import logging
-import os
 from string import Template
 from slack_sdk import WebClient
 from typing import List
@@ -24,7 +23,8 @@ class Bot:
         message = template.substitute(user=f'<@{user_id}>')
         return self.send_message(channel, message)
 
-    def send_message_with_user_mentions(self, channel, template: Template, user_emails: List[str]):
+    def send_message_with_user_mentions(self, channel, template: Template,
+                                        user_emails: List[str]):
         user_responses = [self.client.users_lookupByEmail(
             email=email) for email in user_emails]
         user_ids = [response['user']['id'] for response in user_responses]
