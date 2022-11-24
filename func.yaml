@@ -16,12 +16,8 @@ run:
   envs:
   - name: GITHUB_ACCESS_TOKEN
     value: "insert token"
-  - name: NOTIFY_REVIEWERS_SLACK_CHANNEL
-    value: "slack channel ID"
   - name: SLACK_BOT_ACCESS_TOKEN
     value: "insert token"
-  - name: SQUAD_CSV_FILENAME
-    value: "squad.csv"
   - name: PR_REMINDERS_CONFIG_PATH
     value: "config.json"
 deploy:
