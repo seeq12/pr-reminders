@@ -44,15 +44,18 @@ def notify_reviewers_of_prs_needing_review(
         gh_api.fetch_prs_needing_review(
             [user.github_username for user in users], repo_node_ids),
         key=lambda pr: pr.updated_at)
-    if len(prs_needing_review) > 0:
-        _slackbot_notify(
-                slackbot_access_token,
-                notify_reviewers_channel,
-                users,
-                'The following PRs have review requests and zero reviews - please take a look!',
-                prs_needing_review)
-    else:
-        _slackbot_notify('All PRs have at least one review :tada:! Great work team!', prs_needing_review)
+
+    message = 'The following PRs have review requests and zero reviews - ' \
+              'please take a look!' \
+        if len(prs_needing_review) > 0 \
+        else 'All PRs have at least one review :tada:! Great work team!'
+
+    _slackbot_notify(
+            slackbot_access_token,
+            notify_reviewers_channel,
+            users,
+            message,
+            prs_needing_review)
 
 
 def notify_reviewers_of_prs_without_primary(
@@ -67,15 +70,17 @@ def notify_reviewers_of_prs_without_primary(
             [user.github_username for user in users], repo_node_ids),
         key=lambda pr: pr.updated_at)
     prs_without_primary = [pr for pr in all_prs_of_squad if _no_primary(pr)]
-    if len(prs_without_primary) > 0:
-        _slackbot_notify(
-            slack_access_token,
-            notify_reviewers_channel,
-            users,
-            'The following PRs have have no primary reviewer - please take a look!',
-            prs_without_primary)
-    else:
-        _slackbot_notify('All PRs have a primary reviewer :tada:! Great work team!', prs_without_primary)
+
+    message = 'The following PRs have have no primary reviewer - please take a look!' \
+        if len(prs_without_primary) > 0 \
+        else 'All PRs have a primary reviewer :tada:! Great work team!'
+
+    _slackbot_notify(
+        slack_access_token,
+        notify_reviewers_channel,
+        users,
+        message,
+        prs_without_primary)
 
 
 def notify_reviewers_of_sleeping_prs(
@@ -91,15 +96,18 @@ def notify_reviewers_of_sleeping_prs(
             [user.github_username for user in users], repo_node_ids),
         key=lambda pr: pr.updated_at)
     sleeping_prs = [pr for pr in all_prs_of_squad if pr.updated_at < past]
-    if len(sleeping_prs) > 0:
-        _slackbot_notify(
-            slack_access_token,
-            notify_reviewers_channel,
-            users,
-            'The following PRs are sleeping (no update in the last 3 days) - please take a look!',
-            sleeping_prs)
-    else:
-        _slackbot_notify('All PRs are active. No PR is sleeping :tada:! Great work team!', sleeping_prs)
+
+    message = 'The following PRs are sleeping (no update in the last 3 days) - ' \
+              'please take a look!' \
+        if len(sleeping_prs) > 0 \
+        else 'All PRs are active. No PR is sleeping :tada:! Great work team!'
+
+    _slackbot_notify(
+        slack_access_token,
+        notify_reviewers_channel,
+        users,
+        message,
+        sleeping_prs)
 
 
 def _no_primary(pr: PrData) -> bool:
