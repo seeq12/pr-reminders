@@ -1,0 +1,51 @@
+query ($name: String!, $owner: String!) {
+  repository(name: $name, owner: $owner) {
+    name
+    pullRequests(
+      states: OPEN
+      first: 100
+      after: null
+      orderBy: {field: UPDATED_AT, direction: ASC}
+    ) {
+      totalCount
+      pageInfo {
+        endCursor
+        startCursor
+        hasNextPage
+      }
+      nodes {
+        title
+        body
+        updatedAt
+        url
+        isDraft
+        reviews(states: [APPROVED, CHANGES_REQUESTED], first: 50) {
+          totalCount
+          nodes {
+            state
+            author {
+              login
+            }
+          }
+        }
+        reviewRequests(first: 25) {
+          totalCount
+          nodes {
+            requestedReviewer {
+              ... on Team {
+                members(first: 25) {
+                  nodes {
+                    login
+                  }
+                }
+              }
+              ... on User {
+                login
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

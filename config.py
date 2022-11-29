@@ -1,16 +1,20 @@
 from dataclasses import dataclass
 import json
 from pathlib import Path
-from typing import List
+from typing import List, TypedDict
 
 from squad_member import SquadMember
 
 
+class Repo(TypedDict):
+    name: str
+    owner: str
+
 @dataclass
 class Config:
+    repos: List[Repo]
     users: List[SquadMember]
     reminders: List[str]
-    repo_node_ids: List[str]
     slack_channel_id: str
 
 
@@ -21,7 +25,8 @@ def read_config_file(config_file_path: Path) -> dict:
 
 def parse_config(config_data: dict) -> Config:
     return Config(
-        repo_node_ids=config_data['repo_node_ids'],
+        repos=[Repo(name=repo['name'], owner=repo['owner'])
+               for repo in config_data['repos']],
         reminders=config_data['reminders'],
         users=[SquadMember(user['email'], user['github_username'])
                for user in config_data['users']],
