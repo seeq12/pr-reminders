@@ -22,7 +22,6 @@ def main():
     config = configuration.load_config(env.config_file_path)
     pr_query = queries.load_query('pull_requests.graphql')
     now = datetime.utcnow().replace(tzinfo=timezone.utc)
-    past = datetime.utcnow().replace(tzinfo=timezone.utc) - timedelta(days=3)
 
     repo_pr_queries = [queries.QueryRequest(query=pr_query, variables=repo)
                        for repo in config.repos]
