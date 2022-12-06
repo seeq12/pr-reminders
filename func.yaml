@@ -3,7 +3,7 @@ name: pr-reminders
 runtime: python
 registry: docker.io/seeq13
 image: docker.io/seeq13/pr-reminders:latest
-imageDigest: sha256:bde23270d664a3c779767a5602a3c38998358175aa13b93c1e985fe0e6680d85
+imageDigest: sha256:d30b17d4d9cdd6631c37155072d365da86faf5d726d4954c2d5d8cf58e40df87
 created: 2022-11-08T14:54:46.343075-08:00
 invocation:
   format: http
@@ -13,13 +13,7 @@ build:
   buildEnvs: []
 run:
   volumes: []
-  envs:
-  - name: GITHUB_ACCESS_TOKEN
-    value: "insert token"
-  - name: SLACK_BOT_ACCESS_TOKEN
-    value: "insert token"
-  - name: PR_REMINDERS_CONFIG_PATH
-    value: "config.json"
+  envs: []
 deploy:
   namespace: default
   annotations: {}
