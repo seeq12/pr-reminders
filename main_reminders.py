@@ -1,90 +1,139 @@
 from datetime import datetime, timedelta, timezone
+from dotenv import load_dotenv
+import itertools
 from string import Template
-from github_api import GithubApi, PrData
+from typing import List, TypedDict
 import slack
+
+import environment
+import config as configuration
+from github import queries, github_api
 import squad
-import os
-
-NOTIFY_REVIEWERS_SLACK_CHANNEL_VAR_NAME = 'NOTIFY_REVIEWERS_SLACK_CHANNEL'
+from squad_member import SquadMember
 
 
-def notify_reviewers_of_prs_needing_review():
-    gh_api = GithubApi()
-    prs_needing_review = sorted(gh_api.fetch_prs_needing_review(), key=lambda pr: pr.updated_at)
-    if len(prs_needing_review) > 0:
-        _slackbot_notify(
-            'The following PRs have review requests and zero reviews - please take a look!',
-            prs_needing_review)
-    else:
-        _slackbot_notify('All PRs have at least one review :tada:! Great work team!', prs_needing_review)
+class PrReminder(TypedDict):
+    message: str
+    prs: List[github_api.PrData]
 
 
-def notify_reviewers_of_prs_without_primary():
-    gh_api = GithubApi()
-    all_prs_of_squad = sorted(gh_api.fetch_all_prs_for_squad(), key=lambda pr: pr.updated_at)
-    prs_without_primary = [pr for pr in all_prs_of_squad if _no_primary(pr)]
-    if len(prs_without_primary) > 0:
-        _slackbot_notify(
-            'The following PRs have have no primary reviewer - please take a look!',
-            prs_without_primary)
-    else:
-        _slackbot_notify('All PRs have a primary reviewer :tada:! Great work team!', prs_without_primary)
+def main():
+    env = environment.load_environment()
+    config = configuration.load_config(env.config_file_path)
+    pr_query = queries.load_query('pull_requests.graphql')
+    now = datetime.utcnow().replace(tzinfo=timezone.utc)
 
-def notify_reviewers_of_sleeping_prs():
-    past = datetime.utcnow().replace(tzinfo=timezone.utc) - timedelta(days=3)
-    gh_api = GithubApi()
-    all_prs_of_squad = sorted(gh_api.fetch_all_prs_for_squad(), key=lambda pr: pr.updated_at)
-    sleeping_prs = [pr for pr in all_prs_of_squad if pr.updated_at < past]
-    if len(sleeping_prs) > 0:
-        _slackbot_notify(
-            'The following PRs are sleeping (no update in the last 3 days) - please take a look!',
-            sleeping_prs)
-    else:
-        _slackbot_notify('All PRs are active. No PR is sleeping :tada:! Great work team!', sleeping_prs)
+    repo_pr_queries = [queries.QueryRequest(query=pr_query, variables=repo)
+                       for repo in config.repos]
+    gh_api = github_api.GithubApi(env.github_access_token)
+
+    query_responses = [gh_api.fetch(query_request)
+                       for query_request in repo_pr_queries]
+
+    github_usernames = [user.github_username for user in config.users]
+    prs = itertools.chain.from_iterable(
+        [github_api.parse_prs(github_usernames, query_response)
+         for query_response in query_responses]
+    )
+    prs_with_relevant_reviewers = sorted(
+        [pr for pr in prs if len(pr.reviewers) > 0],
+        key=lambda pr: pr.updated_at
+    )
+    reminders = [
+        _needs_review_reminder(prs_with_relevant_reviewers),
+        _sleeping_reminder(now, prs_with_relevant_reviewers),
+        _no_primary_reminder(prs_with_relevant_reviewers)
+    ]
+
+    slackbot = slack.Bot(env.slack_access_token)
+    for reminder in reminders:
+        _slackbot_notify(slackbot, config.slack_channel_id,
+                         config.users, reminder['message'], reminder['prs'])
 
 
-def _no_primary(pr: PrData) -> bool:
+def _needs_review_reminder(prs: List[github_api.PrData]) -> PrReminder:
+    prs_needing_review = [
+        pr for pr in prs
+        if pr.review_requests_count > 0 and pr.reviews_count == 0
+    ]
+    message = 'The following PRs have review requests and zero reviews - please take a look!' \
+        if len(prs_needing_review) > 0 \
+        else 'All PRs have at least one review :tada:! Great work team!'
+    return {
+        'prs': prs_needing_review,
+        'message': message
+    }
+
+
+def _sleeping_reminder(now: datetime, prs: List[github_api.PrData]) -> PrReminder:
+    sleeping_prs = [
+        pr for pr in prs
+        if pr.updated_at < now - timedelta(days=3)
+    ]
+    message = 'The following PRs are sleeping (no update in the last 3 days) - please take a look!' \
+        if len(sleeping_prs) > 0 \
+        else 'All PRs are active. No PRs are sleeping :tada:! Great work team!'
+    return {
+        'prs': sleeping_prs,
+        'message': message
+    }
+
+
+def _no_primary_reminder(prs: List[github_api.PrData]) -> PrReminder:
+    prs_without_primary = [
+        pr for pr in prs if _no_primary(pr)
+    ]
+    message = 'The following PRs have have no primary reviewer - please take a look!' \
+        if len(prs_without_primary) > 0 \
+        else 'All PRs have a primary reviewer :tada:! Great work team!'
+    return {
+        'prs': prs_without_primary,
+        'message': message
+    }
+
+
+def _no_primary(pr: github_api.PrData) -> bool:
     primary = _extract_primary(pr).lower()
     return primary.find('replace this with a @mention') >= 0 or primary.find('volunt') >= 0
 
 
-def _slackbot_notify(notification_text: str, prs: list[PrData]):
-    reviewer_emails = _reviewers_for_prs(prs)
-    slackbot = slack.Bot()
+def _slackbot_notify(
+        slackbot: slack.Bot,
+        notify_reviewers_channel,
+        users: List[SquadMember],
+        notification_text: str,
+        prs: list[github_api.PrData]):
+    reviewer_emails = _reviewers_for_prs(users, prs)
     pr_messages = [_build_pr_message(pr) for pr in prs]
     message_template = Template(notification_text + '\n\n '
                                 + '\n'.join(pr_messages)
                                 + '\n\n$users')
-    slackbot.send_message_with_user_mentions(_notify_reviewers_channel(), message_template, reviewer_emails)
+    slackbot.send_message_with_user_mentions(
+        notify_reviewers_channel, message_template, reviewer_emails)
 
 
-def _notify_reviewers_channel():
-    if NOTIFY_REVIEWERS_SLACK_CHANNEL_VAR_NAME not in os.environ:
-        raise RuntimeError(f'{NOTIFY_REVIEWERS_SLACK_CHANNEL_VAR_NAME} must be set as an environment variable')
-
-    return os.environ.get(NOTIFY_REVIEWERS_SLACK_CHANNEL_VAR_NAME)
-
-
-def _extract_primary(pr: PrData) -> str:
-    after_marker1 = pr.body.find('**Primary reviewer**') + len('**Primary reviewer**')
+def _extract_primary(pr: github_api.PrData) -> str:
+    after_marker1 = pr.body.find(
+        '**Primary reviewer**') + len('**Primary reviewer**')
     marker2 = pr.body.find('**Knowledge base**')
     if after_marker1 < 0 or marker2 < after_marker1:
         return ''
     return pr.body[after_marker1: marker2].strip()
 
 
-def _reviewers_for_prs(prs_needing_review):
+def _reviewers_for_prs(users: List[SquadMember], prs_needing_review) -> List[str]:
+    github_username_lookup = squad.build_github_username_lookup(users)
     all_reviewer_squad_members = list({
-        squad.github_username_lookup[reviewer]
+        github_username_lookup[reviewer]
         for pr in prs_needing_review
         for reviewer in pr.reviewers
-        if reviewer in squad.github_username_lookup
+        if reviewer in github_username_lookup
     })
     reviewer_emails = [member.email for member in all_reviewer_squad_members]
     return reviewer_emails
 
 
-def _build_pr_message(pr: PrData):
+def _build_pr_message(pr: github_api.PrData) -> str:
     updated_at_timestamp = int(pr.updated_at.timestamp())
     updated_at_text = pr.updated_at.strftime('%B %d')
     # https://api.slack.com/reference/surfaces/formatting#date-formatting
@@ -93,6 +142,5 @@ def _build_pr_message(pr: PrData):
 
 
 if __name__ == '__main__':
-    notify_reviewers_of_prs_needing_review()
-    notify_reviewers_of_prs_without_primary()
-    notify_reviewers_of_sleeping_prs()
+    load_dotenv()
+    main()
