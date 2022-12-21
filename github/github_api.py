@@ -21,7 +21,7 @@ class PrData:
     reviews_count: int
 
 
-def parse_prs(github_usernames: List[str], query_response: Any) -> List[PrData]:
+def parse_prs(github_usernames: List[str], query_response: dict) -> List[PrData]:
     try:
         return [
             PrData(
@@ -62,7 +62,7 @@ class GithubApi:
     def __init__(self, access_token: str):
         self.access_token = access_token
 
-    def fetch(self, query_request: queries.QueryRequest) -> Any:
+    def fetch(self, query_request: queries.QueryRequest) -> dict:
         headers = {'Authorization': f'bearer {self.access_token}'}
         endpoint = 'https://api.github.com/graphql'
         response = requests.post(
