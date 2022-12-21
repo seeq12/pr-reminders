@@ -13,7 +13,13 @@ build:
   buildEnvs: []
 run:
   volumes: []
-  envs: []
+  envs:
+  - name: PR_REMINDERS_CONFIG_PATH
+    value: '{{ env:PR_REMINDERS_CONFIG_PATH }}'
+  - name: GITHUB_ACCESS_TOKEN
+    value: '{{ env:GITHUB_ACCESS_TOKEN }}'
+  - name: SLACK_BOT_ACCESS_TOKEN
+    value: '{{ env:SLACK_BOT_ACCESS_TOKEN }}'
 deploy:
   namespace: default
   annotations: {}
