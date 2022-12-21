@@ -1,7 +1,6 @@
 from dataclasses import dataclass
-import json
 
-from parliament import Context
+from parliament import Context  # type: ignore
 from flask import Request
 
 import main_reminders
@@ -14,11 +13,11 @@ class Response:
 
 
 def handle(req: Request) -> Response:
-  if req.method == "GET":
+  try:
     main_reminders.main()
     return Response({'data': 'Success!'})
-  else:
-    return Response({'data': 'Not found'}, 404)
+  except RuntimeError as e:
+    return Response({'data': str(e)}, 500)
 
 
 def main(context: Context):
