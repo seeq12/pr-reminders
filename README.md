@@ -83,9 +83,7 @@ The environment variables you'll need to set are described in [Environment varia
 
 # Python HTTP Function
 
-Welcome to your new Python function project! The boilerplate function
-code can be found in [`func.py`](./func.py). This function will respond
-to incoming HTTP GET and POST requests.
+There is a Knative function [`func.py`](./func.py) that can be used to deploy on Knative. You can also run the function locally using the [Knative func CLI](https://knative.dev/docs/functions/install-func/)'s `func run`.
 
 ## Endpoints
 
@@ -104,8 +102,7 @@ You can use `func invoke` to send an HTTP request to the function endpoint.
 
 ## Testing
 
-This function project includes a [unit test](./test_func.py). Update this
-as you add business logic to your function in order to test its behavior.
+This function project includes an [integration test](./test_func.py). It passes but it doesn't really test anything useful (yet). Please add tests if you have some time!
 
 ```console
 python test_func.py
