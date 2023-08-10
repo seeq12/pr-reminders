@@ -1,0 +1,19 @@
+{
+  "users": [
+    {
+      "email": "steven.oxley@example.com",
+      "github_username": "xonev"
+    }
+  ],
+  "repos": [
+    {
+      "name": "pr-reminders",
+      "owner": "seeq12"
+    }
+  ],
+  "slack_channel_id": "ABCD1234",
+  "reminders": [
+    "prs_needing_review",
+    "sleeping_prs"
+  ]
+}
