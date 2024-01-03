@@ -29,7 +29,7 @@ class Environment:
 
 
 def load_environment():
-    return Environment(**parse_environment(os.environ, VAR_PARSERS))
+    return Environment(**parse_environment(dict(os.environ), VAR_PARSERS))
 
 
 def parse_environment(environment: dict, parsers: dict) -> dict:

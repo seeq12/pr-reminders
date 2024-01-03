@@ -1,8 +1,7 @@
 from dataclasses import dataclass
 import datetime
 import requests
-import textwrap
-from typing import List, NewType, Any
+from typing import List, NewType
 
 import github.queries as queries
 
