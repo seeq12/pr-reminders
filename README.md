@@ -71,7 +71,7 @@ The token will need the following permissions:
 
 ## Creating the Config File
 
-The configuration file has a specific schema - see [example/config.json](/example/config.json) for an example. See [config.py](/config.py) for more information on supported configuration.
+The configuration file has a specific schema - see [example/config.json](/example/config.json) for an example. See [config.py](/pr-reminders/config.py) for more information on supported configuration.
 
 ## Configuring the Environment
 
@@ -81,29 +81,4 @@ The environment variables you'll need to set are described in [Environment varia
 
 ## Test
 
-# Python HTTP Function
-
-There is a Knative function [`func.py`](./func.py) that can be used to deploy on Knative. You can also run the function locally using the [Knative func CLI](https://knative.dev/docs/functions/install-func/)'s `func run`.
-
-## Endpoints
-
-Running this function will expose three endpoints.
-
-  * `/` The endpoint for your function.
-  * `/health/readiness` The endpoint for a readiness health check
-  * `/health/liveness` The endpoint for a liveness health check
-
-The health checks can be accessed in your browser at
-[http://localhost:8080/health/readiness]() and
-[http://localhost:8080/health/liveness]().
-
-You can use `func invoke` to send an HTTP request to the function endpoint.
-
-
-## Testing
-
-This function project includes an [integration test](./test_func.py). It passes but it doesn't really test anything useful (yet). Please add tests if you have some time!
-
-```console
-python test_func.py
-```
+There aren't any tests yet. Please add some tests if you have some time!

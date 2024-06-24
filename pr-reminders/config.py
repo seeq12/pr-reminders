@@ -10,6 +10,7 @@ class Repo(TypedDict):
     name: str
     owner: str
 
+
 @dataclass
 class Config:
     repos: List[Repo]
