@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+    namespace: {{ .Release.Namespace | quote }}
+    name: {{ .Values.cronJob.name | quote }}
+spec:
+    schedule: {{ .Values.cronJob.schedule | quote }}
+    jobTemplate:
+        spec:
+            template:
+                spec:
+                    containers:
+                        - name: pr-reminders
+                          image: "seeq13/pr-reminders:{{ .Chart.AppVersion }}"
+                          imagePullPolicy: IfNotPresent
+                          volumeMounts:
+                              - mountPath: /app/config
+                                name: config
+                          env:
+                              - name: GITHUB_ACCESS_TOKEN
+                                valueFrom:
+                                    secretKeyRef:
+                                        key: {{ .Values.githubAccessTokenSecretKeyRef.key }}
+                                        name: {{ .Values.githubAccessTokenSecretKeyRef.name }}
+                              - name: SLACK_BOT_ACCESS_TOKEN
+                                valueFrom:
+                                    secretKeyRef:
+                                        key: {{ .Values.slackBotAccessTokenSecretKeyRef.key }}
+                                        name: {{ .Values.slackBotAccessTokenSecretKeyRef.name }}
+
+                    restartPolicy: Never
+                    volumes:
+                        - name: config
+                          configMap:
+                              name: pr-reminders
+                              optional: false

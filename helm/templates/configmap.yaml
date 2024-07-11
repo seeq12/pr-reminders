@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    namespace: {{ .Release.Namespace }}
+    name: pr-reminders
+data:
+    config.json: |
+        {{ .Values.config | mustToJson }}

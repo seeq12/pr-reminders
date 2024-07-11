@@ -1,0 +1,14 @@
+cronJob:
+    name: "pr-reminders"
+    schedule: "0 19 * * *"
+config:
+    users: []
+    repos: []
+    slack_channel_id:
+    reminders: []
+githubAccessTokenSecretKeyRef:
+    key: 'GITHUB_ACCESS_TOKEN'
+    name: 'pr-reminders-config'
+slackBotAccessTokenSecretKeyRef:
+    key: 'SLACK_BOT_ACCESS_TOKEN'
+    name: 'pr-reminders-config'
