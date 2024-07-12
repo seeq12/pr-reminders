@@ -1,0 +1,6 @@
+apiVersion: v2
+name: pr-reminders-helm
+description: A Helm chart for deploying an instance of the pr-reminders Slackbot.
+type: application
+version: "{{ version }}"
+appVersion: "{{ version }}"
