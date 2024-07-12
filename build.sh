@@ -12,7 +12,8 @@ if [[ $# -eq 1 ]]; then
     rm -rf build
     mkdir -p build
     cp -R helm build/chart
-    gsed -e "s/{{ version }}/$version/g" -i'' build/chart/Chart.yaml
+    sed -e "s/{{ version }}/$version/g" build/chart/Chart.yaml > build/chart/Chart.yaml.tmp
+    mv build/chart/Chart.yaml.tmp build/chart/Chart.yaml
     helm package build/chart --destination build
 fi
 
