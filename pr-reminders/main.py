@@ -14,6 +14,7 @@ from squad_member import SquadMember
 
 class PrReminder(TypedDict):
     message: str
+    header: str
     prs: List[github_api.PrData]
 
 
@@ -35,20 +36,18 @@ def main():
         [github_api.parse_prs(github_usernames, query_response)
          for query_response in query_responses]
     )
-    prs_with_relevant_reviewers = sorted(
-        [pr for pr in prs if len(pr.reviewers) > 0],
-        key=lambda pr: pr.updated_at
-    )
+    sorted_prs = sorted(_no_drafts(prs), key=lambda pr: pr.updated_at)
     reminders = [
-        _needs_review_reminder(prs_with_relevant_reviewers),
-        _sleeping_reminder(now, prs_with_relevant_reviewers),
-        _no_primary_reminder(prs_with_relevant_reviewers)
+        _needs_review_reminder(sorted_prs),
+        _sleeping_reminder(now, sorted_prs),
+        _no_primary_reminder(sorted_prs)
     ]
 
     slackbot = slack.Bot(env.slack_access_token)
     for reminder in reminders:
         _slackbot_notify(slackbot, config.slack_channel_id,
-                         config.users, reminder['message'], reminder['prs'])
+                         config.users, reminder['message'], reminder['prs'],
+                         reminder['header'])
 
 
 def _needs_review_reminder(prs: List[github_api.PrData]) -> PrReminder:
@@ -61,7 +60,8 @@ def _needs_review_reminder(prs: List[github_api.PrData]) -> PrReminder:
         else 'All PRs have at least one review :tada:! Great work team!'
     return {
         'prs': prs_needing_review,
-        'message': message
+        'message': message,
+        'header': 'PRs with Review Requests and Zero Reviews'
     }
 
 
@@ -75,7 +75,8 @@ def _sleeping_reminder(now: datetime, prs: List[github_api.PrData]) -> PrReminde
         else 'All PRs are active. No PRs are sleeping :tada:! Great work team!'
     return {
         'prs': sleeping_prs,
-        'message': message
+        'message': message,
+        'header': 'PRs Sleeping (No Update in the Last 3 Days)'
     }
 
 
@@ -88,7 +89,8 @@ def _no_primary_reminder(prs: List[github_api.PrData]) -> PrReminder:
         else 'All PRs have a primary reviewer :tada:! Great work team!'
     return {
         'prs': prs_without_primary,
-        'message': message
+        'message': message,
+        'header': 'PRs with No Primary Reviewer'
     }
 
 
@@ -102,14 +104,15 @@ def _slackbot_notify(
         notify_reviewers_channel,
         users: List[SquadMember],
         notification_text: str,
-        prs: list[github_api.PrData]):
+        prs: list[github_api.PrData],
+        message_header: str):
     reviewer_emails = _reviewers_for_prs(users, prs)
     pr_messages = [_build_pr_message(pr) for pr in prs]
     message_template = Template(notification_text + '\n\n '
                                 + '\n'.join(pr_messages)
                                 + '\n\n$users')
     slackbot.send_message_with_user_mentions(
-        notify_reviewers_channel, message_template, reviewer_emails)
+        notify_reviewers_channel, message_template, reviewer_emails, message_header)
 
 
 def _extract_primary(pr: github_api.PrData) -> str:
@@ -119,6 +122,16 @@ def _extract_primary(pr: github_api.PrData) -> str:
     if after_marker1 < 0 or marker2 < after_marker1:
         return ''
     return pr.body[after_marker1: marker2].strip()
+
+
+def _no_drafts(prs):
+    exclude_title_keywords = ['[WIP]', '[DRAFT]']
+    filtered_prs = [pr for pr in prs if
+                    len(pr.reviewers) > 0 and
+                    not pr.is_draft and
+                    not any(keyword.lower() in pr.title.lower()
+                            for keyword in exclude_title_keywords)]
+    return filtered_prs
 
 
 def _reviewers_for_prs(users: List[SquadMember], prs_needing_review) -> List[str]:
@@ -137,7 +150,7 @@ def _build_pr_message(pr: github_api.PrData) -> str:
     updated_at_timestamp = int(pr.updated_at.timestamp())
     updated_at_text = pr.updated_at.strftime('%B %d')
     # https://api.slack.com/reference/surfaces/formatting#date-formatting
-    return f'* <{pr.html_url}|{pr.title}> ' \
+    return f'- <{pr.html_url}|{pr.title}> ' \
            f'<!date^{updated_at_timestamp}^(Waiting since {{date_short_pretty}} at {{time}})|{updated_at_text}>'
 
 
