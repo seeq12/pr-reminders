@@ -3,12 +3,24 @@ kind: CronJob
 metadata:
     namespace: {{ .Release.Namespace | quote }}
     name: {{ .Values.cronJob.name | quote }}
+    labels:
+        {{- include "common.labels" . | nindent 8 }}
 spec:
     schedule: {{ .Values.cronJob.schedule | quote }}
     jobTemplate:
+        metadata:
+            labels:
+                {{- include "common.labels" . | nindent 16 }}
         spec:
             template:
+                metadata:
+                    labels:
+                        {{- include "common.labels" . | nindent 24 }}
                 spec:
+                    {{- with .Values.nodeSelector}}
+                    nodeSelector:
+                        {{- toYaml . | nindent 24 }}
+                    {{- end }}
                     containers:
                         - name: pr-reminders
                           image: "seeq13/pr-reminders:{{ .Chart.AppVersion }}"
