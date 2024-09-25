@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
     namespace: {{ .Release.Namespace }}
     name: pr-reminders
+    labels:
+        {{- include "common.labels" . | nindent 8 }}
 data:
     config.json: |
         {{ .Values.config | mustToJson }}

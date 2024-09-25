@@ -12,3 +12,4 @@ githubAccessTokenSecretKeyRef:
 slackBotAccessTokenSecretKeyRef:
     key: 'SLACK_BOT_ACCESS_TOKEN'
     name: 'pr-reminders-config'
+nodeSelector: {}
