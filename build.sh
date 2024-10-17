@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 
 image_name="seeq13/pr-reminders"
-docker build --tag "$image_name":latest .
+docker build --platform=linux/amd64,linux/arm64 --tag "$image_name":latest .
 if [[ $# -eq 1 ]]; then
     version="$1"
     docker tag "$image_name":latest "$image_name":"$version"
