@@ -41,7 +41,7 @@ class Bot:
             return self.send_message(channel, message, header)
         except Exception as e:
             logging.error(f"Unexpected error when looking up user by email: {str(e)}")
-            message = template.substitute(user=f'<@{user_email}>')
+            message = template.substitute(user=f'{user_email}')
             return self.send_message(channel, message, header)
 
     def send_message_with_user_mentions(self, channel, template: Template,
@@ -54,6 +54,6 @@ class Bot:
                 user_id_references.append(f'<@{user_id}>')
             except Exception as e:
                 logging.error(f"Unexpected error looking up {email}: {str(e)}")
-                user_id_references.append(f'<@{email}>')
+                user_id_references.append(f'{email}')
         message = template.substitute(users=''.join(user_id_references))
         return self.send_message(channel, message, header)
