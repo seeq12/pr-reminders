@@ -35,7 +35,7 @@ pip install -r requirements.txt
 
 And finally, run the bot:
 ```
-python main_reminders.py
+python pr-reminders/main.py
 ```
 
 ## Creating the Slack Bot
