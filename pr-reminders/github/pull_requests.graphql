@@ -19,6 +19,15 @@ query ($name: String!, $owner: String!) {
         updatedAt
         url
         isDraft
+        author {
+          login
+        }
+        assignees(first: 5) {
+          totalCount
+          nodes {
+            login
+          }
+        }
         reviews(states: [APPROVED, CHANGES_REQUESTED], first: 50) {
           totalCount
           nodes {

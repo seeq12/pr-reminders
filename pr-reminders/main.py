@@ -16,6 +16,9 @@ class PrReminder(TypedDict):
     message: str
     header: str
     prs: List[github_api.PrData]
+    notify_reviewers: bool
+    notify_author: bool
+    notify_assignee: bool
 
 
 def main():
@@ -47,7 +50,8 @@ def main():
     for reminder in reminders:
         _slackbot_notify(slackbot, config.slack_channel_id,
                          config.users, reminder['message'], reminder['prs'],
-                         reminder['header'])
+                         reminder['header'], reminder['notify_reviewers'],
+                         reminder['notify_author'], reminder['notify_assignee'])
 
 
 def _needs_review_reminder(prs: List[github_api.PrData]) -> PrReminder:
@@ -58,11 +62,14 @@ def _needs_review_reminder(prs: List[github_api.PrData]) -> PrReminder:
     message = 'The following PRs have review requests and zero reviews - please take a look!' \
         if len(prs_needing_review) > 0 \
         else 'All PRs have at least one review :tada:! Great work team!'
-    return {
-        'prs': prs_needing_review,
-        'message': message,
-        'header': 'PRs with Review Requests and Zero Reviews'
-    }
+    return PrReminder(
+        prs=prs_needing_review,
+        message=message,
+        header='PRs with Review Requests and Zero Reviews',
+        notify_reviewers=True,
+        notify_author=True,
+        notify_assignee=True
+    )
 
 
 def _sleeping_reminder(now: datetime, prs: List[github_api.PrData]) -> PrReminder:
@@ -73,11 +80,14 @@ def _sleeping_reminder(now: datetime, prs: List[github_api.PrData]) -> PrReminde
     message = 'The following PRs are sleeping (no update in the last 3 days) - please take a look!' \
         if len(sleeping_prs) > 0 \
         else 'All PRs are active. No PRs are sleeping :tada:! Great work team!'
-    return {
-        'prs': sleeping_prs,
-        'message': message,
-        'header': 'PRs Sleeping (No Update in the Last 3 Days)'
-    }
+    return PrReminder(
+        prs=sleeping_prs,
+        message=message,
+        header='PRs Sleeping (No Update in the Last 3 Days)',
+        notify_reviewers=False,
+        notify_author=True,
+        notify_assignee=True
+    )
 
 
 def _no_primary_reminder(prs: List[github_api.PrData]) -> PrReminder:
@@ -87,11 +97,14 @@ def _no_primary_reminder(prs: List[github_api.PrData]) -> PrReminder:
     message = 'The following PRs have have no primary reviewer - please take a look!' \
         if len(prs_without_primary) > 0 \
         else 'All PRs have a primary reviewer :tada:! Great work team!'
-    return {
-        'prs': prs_without_primary,
-        'message': message,
-        'header': 'PRs with No Primary Reviewer'
-    }
+    return PrReminder(
+        prs=prs_without_primary,
+        message=message,
+        header='PRs with No Primary Reviewer',
+        notify_reviewers=True,
+        notify_author=True,
+        notify_assignee=True
+    )
 
 
 def _no_primary(pr: github_api.PrData) -> bool:
@@ -105,14 +118,20 @@ def _slackbot_notify(
         users: List[SquadMember],
         notification_text: str,
         prs: list[github_api.PrData],
-        message_header: str):
-    reviewer_emails = _reviewers_for_prs(users, prs)
+        message_header: str,
+        notify_reviewers: bool,
+        notify_author: bool,
+        notify_assignee: bool) -> None:
+    maybe_authors_emails = _authors_for_prs(users, prs) if notify_author else []
+    maybe_assignee_emails = _assignees_for_prs(users, prs) if notify_assignee else []
+    maybe_reviewer_emails = _reviewers_for_prs(users, prs) if notify_reviewers else []
+    emails_to_notify = list(set(maybe_authors_emails + maybe_assignee_emails + maybe_reviewer_emails))
     pr_messages = [_build_pr_message(pr) for pr in prs]
     message_template = Template(notification_text + '\n\n '
                                 + '\n'.join(pr_messages)
                                 + '\n\n$users')
     slackbot.send_message_with_user_mentions(
-        notify_reviewers_channel, message_template, reviewer_emails, message_header)
+        notify_reviewers_channel, message_template, emails_to_notify, message_header)
 
 
 def _extract_primary(pr: github_api.PrData) -> str:
@@ -134,16 +153,27 @@ def _no_drafts(prs):
     return filtered_prs
 
 
-def _reviewers_for_prs(users: List[SquadMember], prs_needing_review) -> List[str]:
+def _emails_for_prs(users: List[SquadMember], prs: List[github_api.PrData], extract_usernames) -> List[str]:
     github_username_lookup = squad.build_github_username_lookup(users)
-    all_reviewer_squad_members = list({
-        github_username_lookup[reviewer]
-        for pr in prs_needing_review
-        for reviewer in pr.reviewers
-        if reviewer in github_username_lookup
+    squad_members = list({
+        github_username_lookup[username]
+        for pr in prs
+        for username in extract_usernames(pr)
+        if username in github_username_lookup
     })
-    reviewer_emails = [member.email for member in all_reviewer_squad_members]
-    return reviewer_emails
+    return [member.email for member in squad_members]
+
+
+def _reviewers_for_prs(users: List[SquadMember], prs: List[github_api.PrData]) -> List[str]:
+    return _emails_for_prs(users, prs, lambda pr: pr.reviewers)
+
+
+def _assignees_for_prs(users: List[SquadMember], prs: List[github_api.PrData]) -> List[str]:
+    return _emails_for_prs(users, prs, lambda pr: pr.assignees)
+
+
+def _authors_for_prs(users: List[SquadMember], prs: List[github_api.PrData]) -> List[str]:
+    return _emails_for_prs(users, prs, lambda pr: [pr.author])
 
 
 def _build_pr_message(pr: github_api.PrData) -> str:
