@@ -18,6 +18,8 @@ class PrData:
     reviewers: List[Username]
     review_requests_count: int
     reviews_count: int
+    author: Username
+    assignees: List[Username]
 
 
 def parse_prs(github_usernames: List[str], query_response: dict) -> List[PrData]:
@@ -32,7 +34,9 @@ def parse_prs(github_usernames: List[str], query_response: dict) -> List[PrData]
                 pr['isDraft'],
                 _extract_reviewers(github_usernames, pr),
                 pr['reviewRequests']['totalCount'],
-                pr['reviews']['totalCount']
+                pr['reviews']['totalCount'],
+                pr['author']['login'],
+                _extract_assignees(pr['assignees']['nodes'])
             )
             for pr in query_response['data']['repository']['pullRequests']['nodes']
         ]
@@ -55,6 +59,10 @@ def _extract_reviewers(github_usernames: List[str], pull_request: dict) -> List[
                       for review_request in review_requests
                       if 'members' not in review_request['requestedReviewer']}
     return [member for member in list(team_usernames | user_usernames) if member in github_usernames]
+
+
+def _extract_assignees(assignees_nodes: List[dict]) -> List[Username]:
+    return [Username(assignee['login']) for assignee in assignees_nodes]
 
 
 class GithubApi:
