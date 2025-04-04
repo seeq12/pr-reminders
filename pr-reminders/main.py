@@ -94,7 +94,7 @@ def _no_primary_reminder(prs: List[github_api.PrData]) -> PrReminder:
     prs_without_primary = [
         pr for pr in prs if _no_primary(pr)
     ]
-    message = 'The following PRs have have no primary reviewer - please take a look!' \
+    message = 'The following PRs have no primary reviewer - please take a look!' \
         if len(prs_without_primary) > 0 \
         else 'All PRs have a primary reviewer :tada:! Great work team!'
     return PrReminder(
