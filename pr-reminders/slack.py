@@ -18,7 +18,7 @@ class Bot:
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": f"*_# {header}_*"
+                        "text": header
                     }
                 },
                 {
