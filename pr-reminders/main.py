@@ -57,11 +57,11 @@ def _needs_review_reminder(prs: List[github_api.PrData]) -> PrReminder:
     ]
     message = 'The following PRs have review requests and zero reviews - please take a look!' \
         if len(prs_needing_review) > 0 \
-        else 'All PRs have at least one review :tada:! Great work team!'
+        else '- All PRs have at least one review :tada:! Great work team!'
     return {
         'prs': prs_needing_review,
         'message': message,
-        'header': 'PRs with Review Requests and Zero Reviews'
+        'header': ':bell: *PRs with Review Requests and Zero Reviews*'
     }
 
 
@@ -72,11 +72,11 @@ def _sleeping_reminder(now: datetime, prs: List[github_api.PrData]) -> PrReminde
     ]
     message = 'The following PRs are sleeping (no update in the last 3 days) - please take a look!' \
         if len(sleeping_prs) > 0 \
-        else 'All PRs are active. No PRs are sleeping :tada:! Great work team!'
+        else '- All PRs are active. No PRs are sleeping :tada:! Great work team!'
     return {
         'prs': sleeping_prs,
         'message': message,
-        'header': 'PRs Sleeping (No Update in the Last 3 Days)'
+        'header': ':bell: *PRs Sleeping (No Update in the Last 3 Days)*'
     }
 
 
@@ -86,11 +86,11 @@ def _no_primary_reminder(prs: List[github_api.PrData]) -> PrReminder:
     ]
     message = 'The following PRs have have no primary reviewer - please take a look!' \
         if len(prs_without_primary) > 0 \
-        else 'All PRs have a primary reviewer :tada:! Great work team!'
+        else '- All PRs have a primary reviewer :tada:! Great work team!'
     return {
         'prs': prs_without_primary,
         'message': message,
-        'header': 'PRs with No Primary Reviewer'
+        'header': ':bell: *PRs with No Primary Reviewer*'
     }
 
 
