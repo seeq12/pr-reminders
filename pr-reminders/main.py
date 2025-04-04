@@ -41,9 +41,9 @@ def main():
     )
     sorted_prs = sorted(_no_drafts(prs), key=lambda pr: pr.updated_at)
     reminders = [
-        _needs_review_reminder(sorted_prs),
+        _needs_review_reminder(now, sorted_prs),
         _sleeping_reminder(now, sorted_prs),
-        _no_primary_reminder(sorted_prs)
+        _no_primary_reminder(now, sorted_prs)
     ]
 
     slackbot = slack.Bot(env.slack_access_token)
@@ -54,10 +54,10 @@ def main():
                          reminder['notify_author'], reminder['notify_assignee'])
 
 
-def _needs_review_reminder(prs: List[github_api.PrData]) -> PrReminder:
+def _needs_review_reminder(now: datetime, prs: List[github_api.PrData]) -> PrReminder:
     prs_needing_review = [
         pr for pr in prs
-        if pr.review_requests_count > 0 and pr.reviews_count == 0
+        if pr.review_requests_count > 0 and pr.reviews_count == 0 and pr.updated_at < now - timedelta(hours=8)
     ]
     message = 'The following PRs have review requests and zero reviews - please take a look!' \
         if len(prs_needing_review) > 0 \
@@ -90,9 +90,9 @@ def _sleeping_reminder(now: datetime, prs: List[github_api.PrData]) -> PrReminde
     )
 
 
-def _no_primary_reminder(prs: List[github_api.PrData]) -> PrReminder:
+def _no_primary_reminder(now: datetime, prs: List[github_api.PrData]) -> PrReminder:
     prs_without_primary = [
-        pr for pr in prs if _no_primary(pr)
+        pr for pr in prs if _no_primary(pr) and pr.updated_at < now - timedelta(hours=8)
     ]
     message = 'The following PRs have no primary reviewer - please take a look!' \
         if len(prs_without_primary) > 0 \
